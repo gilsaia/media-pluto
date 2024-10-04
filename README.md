@@ -1,11 +1,13 @@
 # Media-Pluto
 
-Just a simple tool used for media management
+Just a simple tool used for media management.
 
-Write in Rust,layui.
+It can:
+- Hard Link Files,used for BT.
+
+Write in Rust.
 
 # RoadMap
 
-- [ ] basic page&server
 - [ ] file find&link
 - [ ] transcode&remux
