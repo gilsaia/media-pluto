@@ -9,26 +9,38 @@ use clap::Args;
 pub struct HardLinkArgs {
     base_path: String,
     dst_path: String,
-    #[arg(long, help = "Weather copy all file instead of just video.")]
-    copy_all: bool,
+    #[arg(
+        long,
+        help = "Weather copy all file instead of just video and subtitles."
+    )]
+    link_all: bool,
     #[arg(
         short,
         long,
-        default_value_t = 100,
-        help = "Copy File Size Threshold,default is 100 MB."
+        default_value_t = 10,
+        help = "Link File Size Threshold,default is 10 MB."
     )]
     threshold: u64,
     #[arg(long, help = "Pattern used to filter file")]
     pattern: Option<String>,
 }
 
-fn filter_file(entry: &DirEntry, copy_all: bool, threshold: u64, pattern: &Option<String>) -> bool {
+enum FileType {
+    Video,
+    Subtitle,
+    None,
+}
+
+fn file_type(ext: &str) -> FileType {
+    return match ext {
+        "mp4" | "mkv" | "avi" | "mov" | "wmv" => FileType::Video,
+        "srt" => FileType::Subtitle,
+        _ => FileType::None,
+    };
+}
+
+fn filter_video(entry: &DirEntry, threshold: u64, pattern: &Option<String>) -> bool {
     let path = entry.path();
-    let ext = path.extension().unwrap();
-    if !copy_all && !(ext == "mp4" || ext == "mkv" || ext == "avi" || ext == "mov" || ext == "wmv")
-    {
-        return false;
-    }
     let meta = entry.metadata().unwrap();
     if meta.len() <= (threshold * 1024 * 1024) {
         return false;
@@ -57,8 +69,28 @@ pub fn hard_link_files(args: &HardLinkArgs) -> Result<(), Box<dyn std::error::Er
     }
     for entry in fs::read_dir(base_path)? {
         let entry = entry?;
-        if filter_file(&entry, args.copy_all, args.threshold, &args.pattern) {
-            hard_link(entry.path(), dst_path.join(entry.file_name()))?;
+        let path = entry.path();
+        let dst_file_path = dst_path.join(entry.file_name());
+        let ext = path.extension().unwrap();
+        match file_type(ext.to_str().unwrap()) {
+            FileType::Video => {
+                if filter_video(&entry, args.threshold, &args.pattern) {
+                    hard_link(path, dst_file_path)?
+                }
+            }
+            FileType::Subtitle => {
+                fs::copy(path, dst_file_path)?;
+            }
+            _ => {
+                if args.link_all {
+                    let meta = entry.metadata()?;
+                    if meta.len() < args.threshold {
+                        fs::copy(path, dst_file_path)?;
+                    } else {
+                        hard_link(path, dst_file_path)?;
+                    }
+                }
+            }
         }
     }
     Ok(())
