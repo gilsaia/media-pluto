@@ -1,4 +1,8 @@
-use std::{fs, io, path::PathBuf, process::Command};
+use std::{
+    fs,
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
 use clap::Args;
 
@@ -30,22 +34,26 @@ pub fn transcode_files(args: &TranscodeArgs) -> Result<(), Box<dyn std::error::E
                     .args([
                         "-i",
                         path.to_str().expect("src path wrong"),
-                        "-c:v libx265",
-                        "-map 0:v",
-                        "-c:a copy",
-                        "-map 0:a",
-                        "-c:s copy",
-                        "-map 0:s",
+                        "-c:v",
+                        "libx265",
+                        "-map",
+                        "0:v",
+                        "-c:a",
+                        "copy",
+                        "-map",
+                        "0:a",
+                        "-c:s",
+                        "copy",
+                        "-map",
+                        "0:s",
+                        dst_file_path.to_str().expect("dst path wrong"),
                     ])
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
                     .output()
                     .expect("Failed to execute command");
                 println!("For File {} Transcode Done!", path.display());
-                println!(
-                    "Output Status {} Out {:?} Err {:?}",
-                    &output.status, &output.stdout, &output.stderr
-                );
-                // io::stdout().write_all(&output.stdout).unwrap();
-                // io::stderr().write_all(&output.stderr).unwrap();
+                println!("Output Status {}", &output.status);
             }
             _ => {
                 fs::copy(path, dst_file_path)?;
