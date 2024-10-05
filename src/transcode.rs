@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, process::Command};
+use std::{fs, io, path::PathBuf, process::Command};
 
 use clap::Args;
 
@@ -40,7 +40,12 @@ pub fn transcode_files(args: &TranscodeArgs) -> Result<(), Box<dyn std::error::E
                     .output()
                     .expect("Failed to execute command");
                 println!("For File {} Transcode Done!", path.display());
-                println!("Output Status {}", output.status);
+                println!(
+                    "Output Status {} Out {:?} Err {:?}",
+                    &output.status, &output.stdout, &output.stderr
+                );
+                // io::stdout().write_all(&output.stdout).unwrap();
+                // io::stderr().write_all(&output.stderr).unwrap();
             }
             _ => {
                 fs::copy(path, dst_file_path)?;
