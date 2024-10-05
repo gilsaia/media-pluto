@@ -5,6 +5,9 @@ use std::{
 
 use clap::Args;
 
+use crate::utils::file_type;
+use crate::utils::FileType;
+
 #[derive(Args)]
 pub struct HardLinkArgs {
     base_path: String,
@@ -23,20 +26,6 @@ pub struct HardLinkArgs {
     threshold: u64,
     #[arg(long, help = "Pattern used to filter file")]
     pattern: Option<String>,
-}
-
-enum FileType {
-    Video,
-    Subtitle,
-    None,
-}
-
-fn file_type(ext: &str) -> FileType {
-    return match ext {
-        "mp4" | "mkv" | "avi" | "mov" | "wmv" => FileType::Video,
-        "srt" => FileType::Subtitle,
-        _ => FileType::None,
-    };
 }
 
 fn filter_video(entry: &DirEntry, threshold: u64, pattern: &Option<String>) -> bool {
