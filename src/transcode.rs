@@ -26,7 +26,7 @@ pub fn transcode_files(args: &TranscodeArgs) -> Result<(), Box<dyn std::error::E
         let ext = path.extension().unwrap();
         match file_type(ext.to_str().unwrap()) {
             FileType::Video => {
-                let _ = Command::new("ffmpeg")
+                let output = Command::new("ffmpeg")
                     .args([
                         "-i",
                         path.to_str().expect("src path wrong"),
@@ -39,6 +39,8 @@ pub fn transcode_files(args: &TranscodeArgs) -> Result<(), Box<dyn std::error::E
                     ])
                     .output()
                     .expect("Failed to execute command");
+                println!("For File {} Transcode Done!", path.display());
+                println!("Output Status {}", output.status);
             }
             _ => {
                 fs::copy(path, dst_file_path)?;
