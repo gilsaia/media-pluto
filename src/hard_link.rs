@@ -56,27 +56,27 @@ pub fn hard_link_files(args: &HardLinkArgs) -> Result<(), Box<dyn std::error::Er
     if !dst_path.exists() || !dst_path.is_dir() {
         panic!("Wrong Dst Path!");
     }
-    for entry in fs::read_dir(base_path)? {
-        let entry = entry?;
+    for entry in fs::read_dir(base_path).expect("Read dir wrong") {
+        let entry = entry.expect("Dir Entry Wrong");
         let path = entry.path();
         let dst_file_path = dst_path.join(entry.file_name());
-        let ext = path.extension().unwrap();
+        let ext = path.extension().expect("Path Ext Wrong");
         match file_type(ext.to_str().unwrap()) {
             FileType::Video => {
                 if filter_video(&entry, args.threshold, &args.pattern) {
-                    hard_link(path, dst_file_path)?
+                    hard_link(path, dst_file_path).expect("Hard Link Wrong");
                 }
             }
             FileType::Subtitle => {
-                fs::copy(path, dst_file_path)?;
+                fs::copy(path, dst_file_path).expect("File Copy Wrong");
             }
             _ => {
                 if args.link_all {
-                    let meta = entry.metadata()?;
+                    let meta = entry.metadata().expect("meta data wrong");
                     if meta.len() < args.threshold {
-                        fs::copy(path, dst_file_path)?;
+                        fs::copy(path, dst_file_path).expect("File Copy Wrong");
                     } else {
-                        hard_link(path, dst_file_path)?;
+                        hard_link(path, dst_file_path).expect("Hard Link Wrong");
                     }
                 }
             }
